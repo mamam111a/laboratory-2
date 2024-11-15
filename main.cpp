@@ -35,7 +35,7 @@ int main()
             cout << endl << "LETS GO -->> ";
             cin.ignore();
             string expression;
-            
+
             getline(cin, expression);
             string expressionTemp = expression;
             stringstream ss(expression);
@@ -48,7 +48,7 @@ int main()
             string prev = "";
             while (getline(ss, part, ' ')) {
                 if (part == "(") {
-                    if (prev != "oper" && prev != "") {
+                    if (prev != "oper" && prev != "" && prev != "bracket") {
                         isWrong = true;
                         break;
                     }
@@ -57,7 +57,7 @@ int main()
 
                 }
                 else if (part == ")") {
-                    if (prev != "number") {
+                    if (prev != "number" && prev != "bracket") {
                         isWrong = true;
                         break;
                     }
@@ -65,21 +65,21 @@ int main()
                     countBrackets++;
                 }
                 else if (part == "+" || part == "-" || part == "*") {
-                    
+
                     if (prev != "number" && prev != "bracket") {
                         isWrong = true;
                         break;
                     }
                     prev = "oper";
                     countOperators++;
-                    
+
                 }
-                else if (isdigit(part.at(0))) {
+                else if (isdigit(part.at(0)) || part.at(0) == '-') {
                     if (part.at(0) == '0') {
                         isWrong = true;
                         break;
                     }
-                    int i = 0;
+                    int i = 1;
                     while (i != part.size()) {
                         if (isdigit(part.at(i)) == false) {
                             isWrong = true;
@@ -114,25 +114,19 @@ int main()
             string current = "";
 
             while (getline(sss, current, ' ')) {
-                if (isdigit(current.at(0))) {
-                    stackNumb.SPUSH(current);
-                }
-                else if (current == "+" || current == "-" || current == "*") {
+
+                if (current == "+" || current == "-" || current == "*") {
                     if (stackOper.tail == nullptr) {
                         stackOper.SPUSH(current);
                         continue;
                     }
-                    
-                    if (current == "+" || current == "-") {//
+                    if (current == "+" || current == "-") {
                         if (stackOper.tail->cell == "*") {
-                            ProcessingExpression("*", stackOper, stackNumb, current);
+                            ProcessingExpression("*", stackOper, stackNumb, current, 0);
                         }
                         else {
-                            if (stackOper.tail->cell == "+") {
-                                ProcessingExpression("+", stackOper, stackNumb, current);
-                            }
-                            else if (stackOper.tail->cell == "-") {
-                                ProcessingExpression("-", stackOper, stackNumb, current);
+                            if (stackOper.tail->cell == "+" && current == "+") {
+                                ProcessingExpression("+", stackOper, stackNumb, current, 0);
                             }
                             else {
                                 stackOper.SPUSH(current);
@@ -142,19 +136,50 @@ int main()
                     }
                     else if (current == "*") {
                         if (stackOper.tail->cell == "*") {
-                            ProcessingExpression("*", stackOper, stackNumb, current);
+                            ProcessingExpression("*", stackOper, stackNumb, current, 0);
                         }
                         else {
                             stackOper.SPUSH(current);
                         }
                     }
-                    
+
                 }
+
                 else if (current == "(") {
                     stackOper.SPUSH(current);
                 }
+                else if (current.at(0) == '-') {
+                    if (stackOper.tail != nullptr) {
+                        if (stackOper.tail->cell == "-") {
+                            int temp = stoi(current);
+                            temp = temp * (-1);
+                            string strTemp = to_string(temp);
+                            stackNumb.SPUSH(strTemp);
+                            stackOper.tail->cell = "+";
+                        }
+                    }
+                    stackNumb.SPUSH(current);
+                    continue;
+                }
+                else if (isdigit(current.at(0))) {
+                    if (stackOper.tail != nullptr) {
+                        if (stackOper.tail->cell == "-") {
+                            int temp = stoi(current);
+                            temp = temp * (-1);
+                            string strTemp = to_string(temp);
+                            stackNumb.SPUSH(strTemp);
+                            stackOper.tail->cell = "+";
+                        }
+                        else {
+                            stackNumb.SPUSH(current);
+                        }
+                    }
+                    else {
+                        stackNumb.SPUSH(current);
+                    }
+                }
                 else {
-                    while (stackOper.tail->cell != "(") {
+                    while (stackOper.tail->cell != "(") { 
                         string tempOper = stackOper.tail->cell;
                         int B = stoi(stackNumb.tail->cell);
                         stackNumb.SPOP();
@@ -165,22 +190,54 @@ int main()
                         if (tempOper == "*")  result = A * B;
                         else if (tempOper == "+") result = A + B;
                         else if (tempOper == "-") result = A - B;
-                        
+
                         string temp = to_string(result);
                         stackNumb.SPUSH(temp);
+
                         stackOper.SPOP();
                     }
                     stackOper.SPOP();
+
+                    if (stackOper.tail != nullptr) {
+                        if (stackOper.tail->cell == "-") {
+                            int temp = stoi(stackNumb.tail->cell);
+                            temp = temp * (-1);
+                            string strTemp = to_string(temp);
+                            stackNumb.tail->cell = strTemp;
+                            stackOper.tail->cell = "+";
+                        }
+                    }
+
                 }
             }
-            while (stackOper.head != nullptr) {
-                string oper = stackOper.tail->cell;
-                stackOper.SPOP();
 
-                int b = stoi(stackNumb.tail->cell);
-                stackNumb.SPOP();
-                int a = stoi(stackNumb.tail->cell);
-                stackNumb.SPOP();
+            while (stackOper.head != nullptr) {
+                if (stackOper.head->next != nullptr) {
+                    if ((stackOper.head->cell == "-" && stackOper.head->next->cell == "*") || (
+                        (stackOper.head->cell == "+" && stackOper.head->next->cell == "*"))) {
+                        string oper = stackOper.head->next->cell;
+
+                        int b = stoi(stackNumb.head->next->next->cell);
+                        int a = stoi(stackNumb.head->next->cell);
+
+                        int result;
+                        result = a * b;
+                        string resultStr = to_string(result);
+
+                        stackNumb.DeleteElement(stackNumb.head->next);
+                        stackOper.DeleteElement(stackOper.head->next);
+
+                        stackNumb.head->next->cell = resultStr;
+
+                    }
+                }
+                string oper = stackOper.head->cell;
+                stackOper.DeleteHead();
+
+                int b = stoi(stackNumb.head->next->cell);
+                int a = stoi(stackNumb.head->cell);
+                stackNumb.DeleteHead();
+                stackNumb.DeleteHead();
 
                 int result;
                 if (oper == "+") result = a + b;
@@ -188,7 +245,8 @@ int main()
                 else if (oper == "*") result = a * b;
 
                 string resultStr = to_string(result);
-                stackNumb.SPUSH(resultStr);
+                stackNumb.AddHead(resultStr);//////////
+
             }
             cout << endl << "RESULT: " << stackNumb.tail->cell << endl;
 
@@ -198,7 +256,7 @@ int main()
             string commandWord;
             cout << endl << "Enter the command -->> ";
             cin.ignore();
-            getline(cin,command);
+            getline(cin, command);
             stringstream ss(command);
             string fileName;
             string element;
@@ -235,7 +293,7 @@ int main()
             FileWrite.close();
         }
         else if (numberTask == "3") {
-            
+
             cout << endl << "WARNING!!! The set should not contain duplicate elements!!!" << endl;
             cout << endl << "LETS GO -->> ";
             cin.ignore();
@@ -243,12 +301,12 @@ int main()
             getline(cin, elements);
             string temp;
             stringstream ss(elements);
-            while (getline(ss,temp, ' ')) {
+            while (getline(ss, temp, ' ')) {
                 set.SETADD(temp);
             }
             FindSubsets(set);
         }
-        else if(numberTask == "4") {
+        else if (numberTask == "4") {
             cout << endl << "LETS GO -->> ";
             cin.ignore();
             string elements;
@@ -284,7 +342,7 @@ int main()
                     else {
                         temp += sorted.data[i] + " ";
                     }
-                    
+
                 }
                 duplicates.MPUSHend(temp);
                 duplicates.RemoveDuplicates();
@@ -321,6 +379,10 @@ int main()
             else {
                 cout << endl << "They are NOT isomorphic!!!" << endl;
             }
+        }
+        else if (numberTask == "EXIT") {
+            cout << endl << "GOOD BYE!!!" << endl;
+            return 0;
         }
         else {
             cout << endl << "INCORRECT INPUT!!!" << endl;

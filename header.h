@@ -34,14 +34,21 @@ struct NodeHash {
 };
 
 struct Stack {
+    int size;
     string cell;
     ~Stack();
-    SingleNode* head = nullptr;
-    SingleNode* tail = nullptr;
+    SingleNode* head;
+    SingleNode* tail;
     void SPUSH(string& cell);
     void SPOP();
     void SREAD();
     void Clear();
+    void DeleteHead();
+    void DeleteElement(SingleNode* target);
+    void AddHead(string& cell);
+
+    Stack() : size(0), head(nullptr), tail(nullptr) {
+    }
 };
 Stack::~Stack() {
     Clear();
@@ -139,6 +146,7 @@ HashTable::~HashTable() {
     delete[] table;
 }
 
-void ProcessingExpression(const string& oper, Stack &stackOper, Stack& stackNumb, string current);
+void ProcessingExpression(const string& oper, Stack& stackOper, Stack& stackNumb, string current);
 void findSumsSet(SetNode& set, int index, int currentSum, string currentElements, SetNode& sums);
 void FindSubsets(SetNode& set);
+
