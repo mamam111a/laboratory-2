@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <cmath>
 using namespace std;
 #include "header.h"
 
@@ -25,17 +26,25 @@ bool SetNode::isFull() {
     }
     return count >= size;
 }
-bool SetNode::FindValue(string value, int& znach) {
-    int index = HashSet(value);
+bool SetNode::FindValue(string value, int &result) {
+    int index = HashSet(value);  
+    int newIndex = index; 
+
     for (int i = 0; i < size; i++) {
-        if (plenty[i] == nullptr) {
-            return false; 
+        if (plenty[index] == nullptr) {// элемент не найден
+            result = -1;  
+            return false;
         }
-        if (plenty[i]->value == value) {
-            znach = i;
+        if (plenty[index]->value == value) { //найден
+            result = index;
             return true;
         }
+
+        // если не найден, пробуем следующую ячейку с помощью второй хеш-функции
+        index = (newIndex + i * HashSet(value)) % size;
     }
+
+    result = -1;
     return false;
 }
 
@@ -60,10 +69,13 @@ void SetNode::SETADD(string value) {
         plenty[index] = new Set{value}; 
     }
     else { //иначе ищем другое свободное место
-        for (int i = 0; i < size; i++) {
-            if (plenty[i] == nullptr) {
-                plenty[i] = new Set{ value }; 
-                break;
+        for (int i = 1; i < size; i++) {
+            // Используем метод пробирования с другой хеш-функцией или методом
+            int newIndex = (index + i * HashSet(value)) % size;  // Пробирование с шагом через вторичную хеш-функцию
+            
+            if (plenty[newIndex] == nullptr) {
+                plenty[newIndex] = new Set{value};  
+                break; 
             }
         }
     }
@@ -108,16 +120,17 @@ void SetNode::SET_AT(string value) {
 }
 
 
-
-void findSumsSet(SetNode& set, int index, int currentSum, string currentElements, SetNode& sums) {
+void findSumsSet(SetNode& set, int index, int currentSum, string currentElements, SetNode& sums) { // 2^10 - 1 (пустое множество)
     // Если мы дошли до конца множества
     if (index == set.size) {
 
         if (sums.plenty[currentSum] == nullptr) {
-            sums.plenty[currentSum] = new Set{ currentElements };
+            sums.SETADD(currentElements);
+            //cout << endl << "Sum: " << currentSum << " Elements: " << currentElements;
         }
         else {
-            sums.plenty[currentSum]->value = (currentElements.empty() ? "" : " ") + currentElements;
+            sums.SETADD(currentElements);
+            //cout << endl << "Sum: " << currentSum << " Elements: " << currentElements;
         }
         return;
     }
@@ -144,7 +157,8 @@ void FindSubsets(SetNode& set) {
             countElements++;
         }
     }
-    SetNode values(countElements + 1);
+    totalSum = totalSum/2;
+    SetNode values(1000);
     stringstream ss(allElements);
     string token;
     while (getline(ss, token, ' ')) {
@@ -152,7 +166,7 @@ void FindSubsets(SetNode& set) {
     }
     int i = 0;
     SetNode sums(1000);
-    findSumsSet(set, 0, 0, "", sums);
+    findSumsSet(set, 0, 0, "", sums); //поиск всех вариаций сумм
 
     /*
     for (int i = 0; i < sums.size; i++) {
@@ -161,45 +175,81 @@ void FindSubsets(SetNode& set) {
         }
     }
     */
-    int maxRightSum = -1;
-    string subsetA = "";
+    int minSum = pow(10,9);
+    ;
+    SetNode sumVariants(1000);
     for (int i = 0; i < sums.size; i++) {
         if (sums.plenty[i] != nullptr && !sums.plenty[i]->value.empty()) {
-            if ((totalSum - i) > maxRightSum) {
-                maxRightSum = i;
-                subsetA = sums.plenty[i]->value;
+            stringstream tempSS1(sums.plenty[i]->value);
+            string tempToken;
+            int tempSum = 0;
+            while(getline(tempSS1, tempToken, ' ')) {
+                tempSum+= stoi(tempToken);
+            }
+            if (abs(totalSum - tempSum) <= minSum) {  // -i так как мы ищем близость к общей сумме всех элементов,
+                string tempNumbers;        // а i это ключ - сумма, где value это список элементов этой суммы
+                stringstream tempSS2(sums.plenty[i]->value);
+                int countNumbers = 0;
+                while(getline(tempSS2, tempNumbers, ' ')) {
+                    countNumbers++;
+                }
+                minSum = abs(totalSum - tempSum); 
+                if (countNumbers != countElements) {
+                    if ((totalSum-tempSum )== minSum) {
+                    sumVariants.SETADD(sums.plenty[i]->value);
+                    }
+                }
+                
             }  
         }
         else {
             continue;
         }
     }
+    string subsetA = "";
     string subsetB = "";
-    for (int i = 0; i < values.size; i++) {
-        if (values.plenty[i] != nullptr && !values.plenty[i]->value.empty()) {
-            if (subsetA.find(values.plenty[i]->value) == string::npos) {
-                subsetB += " " + values.plenty[i]->value;
-            }
-        }
-    }
+    int minDiff = pow(10,9);    
     int sumA = 0;
     int sumB = 0;
-    stringstream ssA(subsetA);
-    stringstream ssB(subsetB);
-    string tokenA;
-    string tokenB;
-    while (getline(ssA, tokenA, ' ')) {
-        if (tokenA != "") {
-            sumA += stoi(tokenA);
-        }  
-    }
-    while (getline(ssB, tokenB, ' ')) {
-        if (tokenB != "") {
-            sumB += stoi(tokenB);
+
+    string finalSubSetA = "";
+    string finalSubSetB = "";
+    int finalDifference = 0;
+    for(int i = 0; i < sumVariants.size; i++) {
+        sumB = 0;
+        sumA = 0;
+        subsetB = "";
+        if(sumVariants.plenty[i] != nullptr && !sumVariants.plenty[i]->value.empty()) {
+
+            subsetA = sumVariants.plenty[i]->value;
+            stringstream ssA(subsetA);
+            string tokenA;
+
+            while (getline(ssA, tokenA, ' ')) {
+                if (tokenA != "") {
+                    sumA += stoi(tokenA);
+                }  
+            }
+            for (int i = 0; i < values.size; i++) {
+                if (values.plenty[i] != nullptr && !values.plenty[i]->value.empty()) {
+                    if (subsetA.find(values.plenty[i]->value) == string::npos) {
+                        subsetB += " " + values.plenty[i]->value;
+                        sumB += stoi(values.plenty[i]->value);
+                    }
+                }
+            }
+            if(abs(sumA-sumB) < minDiff) {
+                finalSubSetA = subsetA;
+                finalSubSetB = subsetB;
+                finalDifference = abs(sumA-sumB);
+                minDiff = abs(sumA-sumB);
+            }
         }
+        
     }
-    cout << endl << "The maximum amount difference: " << abs(sumA - sumB) << endl;
-    cout << endl << "The first subset: " << subsetA << endl;
-    cout << endl << "The second subset: " << subsetB << endl;
+
+    cout << endl << "The maximum amount difference: " << finalDifference << endl;
+    cout << endl << "The first subset: " << finalSubSetA << endl;
+    cout << endl << "The second subset: " << finalSubSetB << endl;
 }
 

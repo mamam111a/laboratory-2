@@ -41,42 +41,7 @@ int Array::MSIZE() {
 void Array::MREAD() {
     cout << endl;
     for (int i = 0; i < size; i++) {
-        if(i != size - 1)
         cout << "[ " << data[i] << " ]" << endl;
     }
     cout << endl;
-}
-
-
-void Array::FindSumsArray(Array& arr, int index, int currentSum, string currentElements, int targetSum, Array& sums) {
-    if (index == arr.size) {
-        if (currentSum == targetSum) {
-            sums.MPUSHend(currentElements);
-        }
-        return;
-    }
-
-    FindSumsArray(arr, index + 1, currentSum, currentElements, targetSum, sums);
-
-    FindSumsArray(arr, index + 1, currentSum + stoi(arr.data[index]), currentElements + (currentElements.empty() ? "" : " ") + arr.data[index], targetSum, sums);
-}
-void Array::RemoveDuplicates() {
-    int newSize = 0;
-
-    for (int i = 0; i < size; ++i) {
-        bool isDuplicate = false;
-
-        for (int j = 0; j < newSize; ++j) {
-            if (data[i] == data[j]) {
-                isDuplicate = true;
-                break;
-            }
-        }
-
-        if (!isDuplicate) {
-            data[newSize] = data[i];
-            newSize++;
-        }
-    }
-    size = newSize;
 }

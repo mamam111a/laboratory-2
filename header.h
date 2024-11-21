@@ -43,9 +43,9 @@ struct Stack {
     void SPOP();
     void SREAD();
     void Clear();
-    void DeleteHead();
-    void DeleteElement(SingleNode* target);
-    void AddHead(string& cell);
+    void DeleteTail();
+    void DelElementValue(SingleNode* target);
+    void AddTail(string& cell);
 
     Stack() : size(0), head(nullptr), tail(nullptr) {
     }
@@ -96,8 +96,6 @@ struct Array {
     void MREPL(const int& index, string& value);
     int MSIZE();
     void MREAD();
-    void FindSumsArray(Array& arr, int index, int currentSum, string currentElements, int targetSum, Array& sums);
-    void RemoveDuplicates();
 };
 Array::Array() : size(0), maxSize(100) {
     data = new string[maxSize];

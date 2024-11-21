@@ -17,70 +17,83 @@ void Stack::Clear() {
     size = 0;
 }
 void Stack::SPUSH(string& cell) {
+    
     SingleNode* node = new SingleNode;
     node->cell = cell;
     node->next = nullptr;
 
     if (head == nullptr) {
+        head = tail = node;
+    }
+    else {
+        node->next = head;
         head = node;
-        tail = node;
+    }
+}
+
+void Stack::SPOP() {
+    if (head == tail) {  
+        delete head;      
+        head = tail = nullptr; 
+        return;
+    }
+    SingleNode* current = head; ///////////
+    head = head->next;
+    delete current;
+}
+void Stack::SREAD() {
+    SingleNode* current = head;
+    cout << endl;
+    while (current != nullptr) {
+        cout << current->cell << " ";
+        current = current->next;
+    }
+    cout << endl;
+}
+
+void Stack::DeleteTail() {
+    if (head == nullptr) {
+        cout << "\nThe list is empty!" << endl;
+        return;
+    }
+    if (head == tail) {
+        delete head;
+        head = tail = nullptr;
+        return;
+    }
+
+    SingleNode* current = head;
+    while (current->next != tail) { 
+        current = current->next;
+    }
+
+    delete tail;
+    tail = current;
+    tail->next = nullptr; 
+}
+void Stack::AddTail(string&cell) {
+
+   SingleNode* node = new SingleNode;
+    node->cell = cell;
+    node->next = nullptr;
+    if (tail == nullptr) {
+        head = tail = node;
+        tail->next = nullptr;
     }
     else {
         tail->next = node;
         tail = node;
+        tail->next = nullptr;
+        
     }
-    size++;
 }
-void Stack::SPOP() {
-    if (head == tail) {
-        delete head;
-        head = tail = nullptr;
-        size--;
-        return;
-    }
-    SingleNode* current = head;
-
-    while (current->next != tail) {
-        current = current->next;
-    }
-    delete tail;
-    tail = current;
-    tail->next = nullptr;
-    size--;
-}
-void Stack::DeleteHead() {
-    if (head == nullptr) {
-        return;
-    }
-    if (head == tail) {
-        delete head;
-        head = tail = nullptr;
-    }
-    else {
-        SingleNode* temp = head;
-        head = head->next;
-        delete temp;
-    }
-    size--;
-}
-void Stack::AddHead(string& cell) {
-    SingleNode* node = new SingleNode;
-    node->cell = cell;
-    node->next = head;
-
-    head = node;
-    if (tail == nullptr) {
-        tail = node;
-    }
-    size++;
-}
-void Stack::DeleteElement(SingleNode* target) {
+void Stack::DelElementValue(SingleNode* target) {
     if (head == nullptr) {
         return;
     }
     if (head == target) {
         size--;
-        DeleteHead();
+        SPOP();
         return;
     }
 
@@ -101,22 +114,13 @@ void Stack::DeleteElement(SingleNode* target) {
     }
     size--;
 }
-void Stack::SREAD() {
-    SingleNode* current = head;
-    cout << endl;
-    while (current != nullptr) {
-        cout << current->cell << " ";
-        current = current->next;
-    }
-    cout << endl;
-}
 
 void ProcessingExpression(const string& oper, Stack& stackOper, Stack& stackNumb, string current, bool parameter) {
 
-    stackOper.SPOP();
+    stackOper.DeleteTail();
     int A = 0;
     int B = stoi(stackNumb.tail->cell);
-    stackNumb.SPOP();
+    stackNumb.DeleteTail();
     if (parameter == 1) {
         A = stoi(stackNumb.tail->cell);
         A = A * (-1);
@@ -125,7 +129,7 @@ void ProcessingExpression(const string& oper, Stack& stackOper, Stack& stackNumb
         A = stoi(stackNumb.tail->cell);
     }
 
-    stackNumb.SPOP();
+    stackNumb.DeleteTail();
 
     int result;
     if (oper == "*") result = A * B;
@@ -135,7 +139,7 @@ void ProcessingExpression(const string& oper, Stack& stackOper, Stack& stackNumb
         result = result * (-1);
     }
     string temp = to_string(result);
-    stackNumb.SPUSH(temp);
-    stackOper.SPUSH(current);
+    stackNumb.AddTail(temp);
+    stackOper.AddTail(current);
 
 }

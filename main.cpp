@@ -114,10 +114,9 @@ int main()
             string current = "";
 
             while (getline(sss, current, ' ')) {
-
                 if (current == "+" || current == "-" || current == "*") {
                     if (stackOper.tail == nullptr) {
-                        stackOper.SPUSH(current);
+                        stackOper.AddTail(current);
                         continue;
                     }
                     if (current == "+" || current == "-") {
@@ -129,7 +128,7 @@ int main()
                                 ProcessingExpression("+", stackOper, stackNumb, current, 0);
                             }
                             else {
-                                stackOper.SPUSH(current);
+                                stackOper.AddTail(current);
                                 continue;
                             }
                         }
@@ -139,14 +138,14 @@ int main()
                             ProcessingExpression("*", stackOper, stackNumb, current, 0);
                         }
                         else {
-                            stackOper.SPUSH(current);
+                            stackOper.AddTail(current);
                         }
                     }
 
                 }
 
                 else if (current == "(") {
-                    stackOper.SPUSH(current);
+                    stackOper.AddTail(current);
                 }
                 else if (current.at(0) == '-') {
                     if (stackOper.tail != nullptr) {
@@ -154,11 +153,11 @@ int main()
                             int temp = stoi(current);
                             temp = temp * (-1);
                             string strTemp = to_string(temp);
-                            stackNumb.SPUSH(strTemp);
+                            stackNumb.AddTail(strTemp);
                             stackOper.tail->cell = "+";
                         }
                     }
-                    stackNumb.SPUSH(current);
+                    stackNumb.AddTail(current);
                     continue;
                 }
                 else if (isdigit(current.at(0))) {
@@ -167,24 +166,24 @@ int main()
                             int temp = stoi(current);
                             temp = temp * (-1);
                             string strTemp = to_string(temp);
-                            stackNumb.SPUSH(strTemp);
+                            stackNumb.AddTail(strTemp);
                             stackOper.tail->cell = "+";
                         }
                         else {
-                            stackNumb.SPUSH(current);
+                            stackNumb.AddTail(current);
                         }
                     }
                     else {
-                        stackNumb.SPUSH(current);
+                        stackNumb.AddTail(current);
                     }
                 }
                 else {
                     while (stackOper.tail->cell != "(") { 
                         string tempOper = stackOper.tail->cell;
                         int B = stoi(stackNumb.tail->cell);
-                        stackNumb.SPOP();
+                        stackNumb.DeleteTail();
                         int A = stoi(stackNumb.tail->cell);
-                        stackNumb.SPOP();
+                        stackNumb.DeleteTail();
 
                         int result = 0;
                         if (tempOper == "*")  result = A * B;
@@ -192,11 +191,11 @@ int main()
                         else if (tempOper == "-") result = A - B;
 
                         string temp = to_string(result);
-                        stackNumb.SPUSH(temp);
+                        stackNumb.AddTail(temp);
 
-                        stackOper.SPOP();
+                        stackOper.DeleteTail();
                     }
-                    stackOper.SPOP();
+                    stackOper.DeleteTail();
 
                     if (stackOper.tail != nullptr) {
                         if (stackOper.tail->cell == "-") {
@@ -224,20 +223,20 @@ int main()
                         result = a * b;
                         string resultStr = to_string(result);
 
-                        stackNumb.DeleteElement(stackNumb.head->next);
-                        stackOper.DeleteElement(stackOper.head->next);
+                        stackNumb.DelElementValue(stackNumb.head->next);
+                        stackOper.DelElementValue(stackOper.head->next);
 
                         stackNumb.head->next->cell = resultStr;
 
                     }
                 }
                 string oper = stackOper.head->cell;
-                stackOper.DeleteHead();
+                stackOper.SPOP();
 
                 int b = stoi(stackNumb.head->next->cell);
                 int a = stoi(stackNumb.head->cell);
-                stackNumb.DeleteHead();
-                stackNumb.DeleteHead();
+                stackNumb.SPOP();
+                stackNumb.SPOP();
 
                 int result;
                 if (oper == "+") result = a + b;
@@ -245,7 +244,7 @@ int main()
                 else if (oper == "*") result = a * b;
 
                 string resultStr = to_string(result);
-                stackNumb.AddHead(resultStr);//////////
+                stackNumb.SPUSH(resultStr);//////////
 
             }
             cout << endl << "RESULT: " << stackNumb.tail->cell << endl;
@@ -322,33 +321,33 @@ int main()
             }
             cout << endl;
             Array sums;
-            array.FindSumsArray(array, 0, 0, "", sum, sums);
-            Array duplicates;
-            for (int i = 0; i < sums.size; i++) {
-                Array sorted;
-                stringstream sss(sums.data[i]);
-                string token;
-                while (getline(sss, token, ' ')) {
-                    sorted.MPUSHend(token);
-                }
-                sort(sorted.data, sorted.data + sorted.size, [](const std::string& a, const std::string& b) {
-                    return stoi(a) < stoi(b);
-                    });
-                string temp = "";
-                for (int i = 0; i < sorted.size; i++) {
-                    if (i == sorted.size - 1) {
-                        temp += sorted.data[i];
+            for(int i = 0; i < array.size; i++) {
+                string subArray = array.data[i];
+                string tempArray1;
+                stringstream ss1(subArray);
+                int sumValues1 = 0;
+                while(getline(ss1, tempArray1, ' ')) {
+                        sumValues1 += stoi(tempArray1);
                     }
-                    else {
-                        temp += sorted.data[i] + " ";
-                    }
-
+                if(sumValues1 == sum) {
+                    sums.MPUSHend(subArray);
                 }
-                duplicates.MPUSHend(temp);
-                duplicates.RemoveDuplicates();
+                for(int j = i+1; j < array.size; j++) {
+                    subArray+= " " + array.data[j];
+                    string tempArray2;
+                    stringstream ss2 (subArray);
+                    int sumValues2 = 0;
+                    while(getline(ss2, tempArray2, ' ')) {
+                        sumValues2 += stoi(tempArray2);
+                    }
+                    if(sumValues2 == sum) {
+                        sums.MPUSHend(subArray);
+                    }
+                }
 
             }
-            duplicates.MREAD();
+            sums.MREAD();
+            
         }
         else if (numberTask == "5") {
             tree.Insert(15);
