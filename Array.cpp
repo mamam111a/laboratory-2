@@ -8,7 +8,7 @@ using namespace std;
 
 
 void Array::MPUSHend(string& value) {
-    data[size++] = value + " ";
+    data[size++] = value;
 }
 
 void Array::MPUSHindex(const int& index, string& value) {
@@ -57,7 +57,7 @@ int Array::MSIZE() {
 void Array::MREAD() {
     cout << endl;
     for (int i = 0; i < size; i++) {  
-        cout << data[i];
+        cout << "[ " << data[i] << " ]" << endl;
     }
     cout << endl;
 }
